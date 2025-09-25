@@ -89,7 +89,8 @@ def hash_header(header: dict) -> str:
 
 def hash_raw_header(header: bytes) -> str:
     assert isinstance(header, bytes)
-    return hash_encode(qhash(header))
+    timestamp = int.from_bytes(header[68:72], byteorder='little')
+    return hash_encode(qhash(header, timestamp))
 
 
 pow_hash_header = hash_header

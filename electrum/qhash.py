@@ -27,14 +27,14 @@ for l in range(NUM_LAYERS):
 state = QuantumState(NUM_QUBITS)
 
 
-def qhash(x: bytes) -> bytes:
+def qhash(x: bytes, timestamp: int) -> bytes:
     in_hash = sha256(x)
     # print(f"in_hash: {in_hash.hex()}")
     for i in range(circuit.get_parameter_count()):
         nibble = in_hash[i // 2] >> (4 * (1 - i % 2)) & 0x0F
         # print(f"nibble: {nibble}")
         circuit.set_parameter(
-            i, (-nibble if i // 16 % 2 == 0 else nibble) * math.pi / 8
+            i, (-1 if i // 16 % 2 == 0 else 1) * (2 * nibble + (timestamp >= 1758762000)) * math.pi / 16
         )
     # print(circuit.to_json())
     state.set_zero_state()
