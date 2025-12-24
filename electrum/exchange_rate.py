@@ -33,7 +33,7 @@ CCY_PRECISIONS = {'BHD': 3, 'BIF': 0, 'BYR': 0, 'CLF': 4, 'CLP': 0,
                   'RWF': 0, 'TND': 3, 'UGX': 0, 'UYI': 0, 'VND': 0,
                   'VUV': 0, 'XAF': 0, 'XAU': 4, 'XOF': 0, 'XPF': 0,
                   # Cryptocurrencies
-                  'BTC': 8, 'LTC': 6, 'XRP': 4, 'ETH': 8,
+                  'BTC': 8, 'LTC': 6, 'XRP': 4, 'ETH': 8, 'QTC': 8,
                   }
 
 SPOT_RATE_REFRESH_TARGET = 150      # approx. every 2.5 minutes, try to refresh spot price
@@ -198,7 +198,7 @@ class ExchangeBase(Logger):
 
     def get_cached_spot_quote(self, ccy: str) -> Decimal:
         """Returns the cached exchange rate as a Decimal"""
-        if ccy == 'BTC':
+        if ccy == 'QTC':
             return Decimal(1)
         rate = self._quotes.get(ccy)
         if rate is None:
@@ -389,7 +389,7 @@ class Coinbase(ExchangeBase):
 class CoinCap(ExchangeBase):
 
     async def get_rates(self, ccy):
-        json = await self.get_json('api.coincap.io', '/v2/rates/bitcoin/')
+        json = await self.get_json('api.coincap.io', '/v2/rates/qubitcoin/')
         return {'USD': to_decimal(json['data']['rateUsd'])}
 
     def history_ccys(self):
@@ -399,7 +399,7 @@ class CoinCap(ExchangeBase):
         # Currently 2000 days is the maximum in 1 API call
         # (and history starts on 2017-03-23)
         history = await self.get_json('api.coincap.io',
-                                      '/v2/assets/bitcoin/history?interval=d1&limit=2000')
+                                      '/v2/assets/qubitcoin/history?interval=d1&limit=2000')
         return dict([(timestamp_to_datetime(h['time']/1000, utc=True).strftime('%Y-%m-%d'), str(h['priceUsd']))
                      for h in history['data']])
 
@@ -436,9 +436,12 @@ class CoinDesk(ExchangeBase):
 class CoinGecko(ExchangeBase):
 
     async def get_rates(self, ccy):
-        json = await self.get_json('api.coingecko.com', '/api/v3/exchange_rates')
-        return dict([(ccy.upper(), to_decimal(d['value']))
-                     for ccy, d in json['rates'].items()])
+        json = await self.get_json('api.coingecko.com', '/api/v3/simple/price?ids=qubitcoin&vs_currencies=%s' % ccy)
+        return {ccy: to_decimal(json['qubitcoin'][ccy.lower()])}
+
+    async def get_currencies(self):
+        json = await self.get_json('api.coingecko.com', '/api/v3/simple/supported_vs_currencies')
+        return [c.upper() for c in json]
 
     def history_ccys(self):
         # CoinGecko seems to have historical data for all ccys it supports
@@ -451,7 +454,7 @@ class CoinGecko(ExchangeBase):
         # > Your request exceeds the allowed time range. Public API users are limited to querying
         # > historical data within the past 365 days. Upgrade to a paid plan to enjoy full historical data access
         history = await self.get_json('api.coingecko.com',
-                                      f"/api/v3/coins/bitcoin/market_chart?vs_currency={ccy}&days={num_days}")
+                                      f"/api/v3/coins/qubitcoin/market_chart?vs_currency={ccy}&days={num_days}")
 
         return dict([(timestamp_to_datetime(h[0]/1000, utc=True).strftime('%Y-%m-%d'), str(h[1]))
                      for h in history['prices']])

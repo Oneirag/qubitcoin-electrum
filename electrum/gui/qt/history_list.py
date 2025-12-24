@@ -633,7 +633,7 @@ class HistoryList(MyTreeView, AcceptFileDragDrop):
         grid.addWidget(QLabel(format_amount(start['BTC_balance'])), 2, 1)
         grid.addWidget(QLabel(format_amount(end['BTC_balance'])), 2, 2)
         #
-        grid.addWidget(QLabel(_("BTC Fiat price")), 3, 0)
+        grid.addWidget(QLabel(_("QTC Fiat price")), 3, 0)
         grid.addWidget(QLabel(format_fiat(start.get('BTC_fiat_price'))), 3, 1)
         grid.addWidget(QLabel(format_fiat(end.get('BTC_fiat_price'))), 3, 2)
         #
